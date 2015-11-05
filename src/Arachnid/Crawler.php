@@ -182,7 +182,9 @@ class Crawler
                 CURLOPT_SSL_VERIFYPEER => false,
             ),
         ));
-		if (!empty(
+		if (!empty($this->auth)) {
+			$client->setAuth($this->auth['user'], $this->auth['pass']);
+		}
         $client->setClient($guzzleClient);
 
         return $client;
