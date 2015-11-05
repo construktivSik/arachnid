@@ -121,7 +121,10 @@ class Crawler
     {
         try {
             $client = $this->getScrapClient();
-
+			
+			if ($this->verbose) {
+				echo "Fetching URL $url\n";
+			}
             $crawler = $client->request('GET', $url);
             $statusCode = $client->getResponse()->getStatus();
 
@@ -246,7 +249,6 @@ class Crawler
 
                 if ($node_url_is_crawlable === true) {
                     // Ensure URL is formatted as absolute
-
                     if (preg_match("@^http(s)?@", $node_url) == false) {
                         if (strpos($node_url, '/') === 0) {
                             $parsed_url = parse_url($this->baseUrl);
