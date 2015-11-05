@@ -27,6 +27,31 @@ use Symfony\Component\DomCrawler\Crawler as DomCrawler;
  */
 class Crawler
 {
+	/**
+     * Authentication Info
+	 * @see https://github.com/FriendsOfPHP/Goutte/blob/master/Goutte/Client.php setAuth()
+     * @var array
+     */
+	public $auth;
+
+	/**
+     * Enable verbose output
+     * @var boolean
+     */
+	public $verbose = false;
+	
+	/**
+     * Regex pattern to check url against
+     * @var string
+     */
+	public $pattern = '';
+	
+	/**
+     * Exclude Regex pattern to check url against
+     * @var string
+     */
+	public $excludePattern = '';
+
     /**
      * The base URL from which the crawler begins crawling
      * @var string
@@ -104,6 +129,11 @@ class Crawler
             $this->links[$hash]['status_code'] = $statusCode;
 
             if ($statusCode === 200) {
+				if ($this->verbose) {
+					echo "$url --> done\n";
+					flush();
+				}
+				
                 $content_type = $client->getResponse()->getHeader('Content-Type');
 
                 if (strpos($content_type, 'text/html') !== false) { //traverse children in case the response in HTML document only
@@ -122,10 +152,18 @@ class Crawler
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
+			if ($this->verbose) {
+				echo "$url --> error (code: " . $e->getCode() . ")\n";
+				flush();
+			}
         } catch (\Exception $e) {
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
+			if ($this->verbose) {
+				echo "$url --> error (code: " . $e->getCode() . ")\n";
+				flush();
+			}
         }
     }
 
@@ -144,6 +182,7 @@ class Crawler
                 CURLOPT_SSL_VERIFYPEER => false,
             ),
         ));
+		if (!empty(
         $client->setClient($guzzleClient);
 
         return $client;
@@ -219,6 +258,27 @@ class Crawler
 
                     // Is this an external URL?
                     $childLinks[$hash]['external_link'] = $this->checkIfExternal($childLinks[$hash]['absolute_url']);
+					
+					// Check against patterns
+					if (!empty($this->pattern)) {
+						if (!preg_match($this->pattern, $childLinks[$hash]['absolute_url'])) {
+							if ($this->verbose) {
+								echo "Skip link " . $childLinks[$hash]['absolute_url'] . "\n";
+							}
+							$childLinks[$hash]['dont_visit'] = true;
+							$childLinks[$hash]['pattern_match'] = false;
+						}
+					}
+					
+					if (!empty($this->excludePattern)) {
+						if (preg_match($this->excludePattern, $childLinks[$hash]['absolute_url'])) {
+							if ($this->verbose) {
+								echo "Skip exclude link " . $childLinks[$hash]['absolute_url'] . "\n";
+							}
+							$childLinks[$hash]['dont_visit'] = true;
+							$childLinks[$hash]['exclude_pattern_match'] = true;
+						}
+					}
 
                     // Additional metadata
                     $childLinks[$hash]['visited'] = false;
