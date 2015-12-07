@@ -39,13 +39,13 @@ class Crawler
      * @var boolean
      */
 	public $verbose = false;
-	
+
 	/**
      * Regex pattern to check url against
      * @var string
      */
 	public $pattern = '';
-	
+
 	/**
      * Exclude Regex pattern to check url against
      * @var string
@@ -69,7 +69,7 @@ class Crawler
      * @var array
      */
     protected $links;
-	
+
 	/**
      * Array of stats
      * @var array
@@ -87,9 +87,9 @@ class Crawler
         $this->maxDepth = $maxDepth;
         $this->links = array();
 		$this->stats = array(
-			'visited' = 0,
-			'skipped' = 0,
-			'errors' = 0,
+			'visited' => 0,
+			'skipped' => 0,
+			'errors' => 0,
 		);
     }
 
@@ -132,7 +132,7 @@ class Crawler
     {
         try {
             $client = $this->getScrapClient();
-			
+
 			if ($this->verbose) {
 				echo "Fetching URL $url\n";
 			}
@@ -148,7 +148,7 @@ class Crawler
 					echo "$url --> done\n";
 					flush();
 				}
-				
+
                 $content_type = $client->getResponse()->getHeader('Content-Type');
 
                 if (strpos($content_type, 'text/html') !== false) { //traverse children in case the response in HTML document only
@@ -276,7 +276,7 @@ class Crawler
 
                     // Is this an external URL?
                     $childLinks[$hash]['external_link'] = $this->checkIfExternal($childLinks[$hash]['absolute_url']);
-					
+
 					// Check against patterns
 					if (!empty($this->pattern)) {
 						if (!preg_match($this->pattern, $childLinks[$hash]['absolute_url'])) {
@@ -288,7 +288,7 @@ class Crawler
 							$this->stats['skipped'] = $this->stats['skipped'] + 1;
 						}
 					}
-					
+
 					if (!empty($this->excludePattern)) {
 						if (preg_match($this->excludePattern, $childLinks[$hash]['absolute_url'])) {
 							if ($this->verbose) {
