@@ -69,6 +69,12 @@ class Crawler
      * @var array
      */
     protected $links;
+	
+	/**
+     * Array of stats
+     * @var array
+     */
+    protected $stats;
 
     /**
      * Constructor
@@ -80,6 +86,11 @@ class Crawler
         $this->baseUrl = $baseUrl;
         $this->maxDepth = $maxDepth;
         $this->links = array();
+		$this->stats = array(
+			'visited' = 0,
+			'skipped' = 0,
+			'errors' = 0,
+		);
     }
 
     /**
@@ -88,7 +99,7 @@ class Crawler
      */
     public function traverse($url = null)
     {
-        if ($url === null) {
+		if ($url === null) {
             $url = $this->baseUrl;
             $this->links[$url] = array(
                 'links_text' => array('BASE_URL'),
@@ -132,6 +143,7 @@ class Crawler
             $this->links[$hash]['status_code'] = $statusCode;
 
             if ($statusCode === 200) {
+				$this->stats['visited'] = $this->stats['visited'] + 1;
 				if ($this->verbose) {
 					echo "$url --> done\n";
 					flush();
@@ -155,6 +167,7 @@ class Crawler
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
+			$this->stats['error'] = $this->stats['error'] + 1;
 			if ($this->verbose) {
 				echo "$url --> error (code: " . $e->getCode() . ")\n";
 				flush();
@@ -163,6 +176,7 @@ class Crawler
             $this->links[$url]['status_code'] = '404';
             $this->links[$url]['error_code'] = $e->getCode();
             $this->links[$url]['error_message'] = $e->getMessage();
+			$this->stats['error'] = $this->stats['error'] + 1;
 			if ($this->verbose) {
 				echo "$url --> error (code: " . $e->getCode() . ")\n";
 				flush();
@@ -271,6 +285,7 @@ class Crawler
 							}
 							$childLinks[$hash]['dont_visit'] = true;
 							$childLinks[$hash]['pattern_match'] = false;
+							$this->stats['skipped'] = $this->stats['skipped'] + 1;
 						}
 					}
 					
@@ -281,6 +296,7 @@ class Crawler
 							}
 							$childLinks[$hash]['dont_visit'] = true;
 							$childLinks[$hash]['exclude_pattern_match'] = true;
+							$this->stats['skipped'] = $this->stats['skipped'] + 1;
 						}
 					}
 
@@ -290,6 +306,7 @@ class Crawler
                 } else {
                     $childLinks[$hash]['dont_visit'] = true;
                     $childLinks[$hash]['external_link'] = false;
+					$this->stats['skipped'] = $this->stats['skipped'] + 1;
                 }
             }
         });
